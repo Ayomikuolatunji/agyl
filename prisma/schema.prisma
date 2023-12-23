@@ -1,0 +1,534 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+model UserType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  user        User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id                    String           @id @default(uuid())
+  firstName             String
+  lastName              String
+  email                 String           @unique
+  password              String
+  isAgreementAccepted   Boolean?         @default(false)
+  needEmailNotification Boolean?
+  level                 ExperienceLevel?
+  userTypeId            String
+  isEmailVerified       Boolean?
+  fieldOfInterestId     String?
+  field                 FieldOfInterest? @relation(fields: [fieldOfInterestId], references: [id])
+  userType              UserType         @relation(fields: [userTypeId], references: [id])
+  userToken             UserToken?
+  student               Student?
+  serviceProvider       ServiceProvider?
+  admin                 Admin?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+}
+
+model UserToken {
+  id        String   @id @default(uuid())
+  token     String   @unique @db.Text
+  userId    String   @unique
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ExperienceLevel {
+  BEGINNERS
+  EXPERIENCED
+  INTERMEDIATE
+}
+
+model FieldOfInterest {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User[]
+  student   Student[]
+  courses   Course[]
+}
+
+model Student {
+  id                      String                   @id @default(uuid())
+  userId                  String                   @unique
+  user                    User                     @relation(fields: [userId], references: [id])
+  hasDownloadedAgreement  Boolean?                 @default(false)
+  categoryId              String?
+  category                StudentCategory?         @relation(fields: [categoryId], references: [id])
+  studentSkills           UserSkill[]
+  nyscCallUpNumber        String?
+  education               Education[]
+  workExperience          WorkExperience[]
+  profileSummary          StudentProfileSummary?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  refereeDetails          RefereeDetails[]
+  guarantorDetails        GuarantorDetails[]
+  studentProfile          StudentProfile[]
+  studentNyscUpload       StudentNyscUpload?
+  validIdUpload           validIdUpload?
+  certificateAchievements CertificateAchievement[]
+  professionalOverview    ProfessionalOverview?
+  pitchVideo              PitchVideo?
+  portfolio               Portfolio?
+  onboardingStatus        OnboardingStatus         @default(Ongoing)
+  onboardingStep          Int?
+  fieldOfInterestId       String?
+  fieldOfInterest         FieldOfInterest?         @relation(fields: [fieldOfInterestId], references: [id])
+  academicSessionId       String?
+  academicSession         AcademicSession?         @relation(fields: [academicSessionId], references: [id])
+}
+
+enum OnboardingStatus {
+  Ongoing
+  Complete
+}
+
+model ServiceProvider {
+  id                    String                   @id @default(uuid())
+  userId                String                   @unique
+  user                  User                     @relation(fields: [userId], references: [id])
+  skills                UserSkill[]
+  education             Education[]
+  workExperience        WorkExperience[]
+  achievements          CertificateAchievement[]
+  meansOfIdentification validIdUpload?
+  professionalOverview  ProfessionalOverview?
+  pitchVideo            PitchVideo?
+  portfolio             Portfolio?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+}
+
+model MedicalCondition {
+  id                   String                 @id @default(uuid())
+  name                 String
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  professionalOverview ProfessionalOverview[]
+}
+
+model Genotype {
+  id                   String                 @id @default(uuid())
+  name                 String
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  professionalOverview ProfessionalOverview[]
+}
+
+model StudentNyscUpload {
+  id               String   @id @default(uuid())
+  publicId         String
+  originalFilename String
+  format           String
+  publicUrl        String
+  studentId        String   @unique
+  student          Student  @relation(fields: [studentId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model validIdUpload {
+  id                String           @id @default(uuid())
+  publicId          String
+  originalFilename  String
+  format            String
+  publicUrl         String
+  studentId         String?          @unique
+  student           Student?         @relation(fields: [studentId], references: [id])
+  serviceProviderId String?          @unique
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model StudentProfile {
+  id              String   @id @default(uuid())
+  profilePicture  String
+  cloudinaryId    String
+  pitchedUrlVideo String
+  student         Student  @relation(fields: [studentId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  studentId       String
+}
+
+model StudentCategory {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  student     Student[]
+}
+
+model UserSkill {
+  id                String           @id @default(uuid())
+  studentId         String?
+  student           Student?         @relation(fields: [studentId], references: [id])
+  serviceProviderId String?
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  skillId           String
+  skill             Skill            @relation(fields: [skillId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model Skill {
+  id            String      @id @default(uuid())
+  name          String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  studentSkills UserSkill[]
+}
+
+model Education {
+  id                String           @id @default(uuid())
+  studentId         String?
+  student           Student?         @relation(fields: [studentId], references: [id])
+  serviceProviderId String?
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  name              String
+  discipline        String
+  degree            Degree
+  country           String
+  state             String
+  city              String
+  address           String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model WorkExperience {
+  id                String           @id @default(uuid())
+  studentId         String?
+  student           Student?         @relation(fields: [studentId], references: [id])
+  serviceProviderId String?
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  companyName       String
+  jobTitle          String
+  startDate         DateTime
+  endDate           DateTime?
+  workingHere       Boolean
+  employmentType    EmploymentType
+  monthlySalary     String
+  openToNegotiate   Boolean
+  currentSalary     String
+  expectedSalary    String
+  jobDescription    String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model RefereeDetails {
+  id                 String   @id @default(uuid())
+  studentId          String
+  student            Student  @relation(fields: [studentId], references: [id])
+  companyName        String
+  refereeFirstName   String
+  refereeLastName    String
+  refereeAddress     String
+  refereeLastEmail   String
+  refereePhoneNumber String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model ProfessionalOverview {
+  id                    String            @id @default(uuid())
+  studentId             String?           @unique
+  student               Student?          @relation(fields: [studentId], references: [id])
+  serviceProviderId     String?           @unique
+  serviceProvider       ServiceProvider?  @relation(fields: [serviceProviderId], references: [id])
+  dateOfBirth           DateTime
+  country               String
+  state                 String
+  city                  String
+  maritalStatus         String
+  phoneNumber           String
+  zipCode               String
+  homePhone             String
+  bloodGroup            String
+  genotypeId            String
+  genoType              Genotype          @relation(fields: [genotypeId], references: [id])
+  medicalConditionId    String?
+  medical               MedicalCondition? @relation(fields: [medicalConditionId], references: [id])
+  language              String            @default("ENGLISH")
+  proficiency           String
+  otherMedicalCondition String?
+}
+
+model CertificateAchievement {
+  id                              String           @id @default(uuid())
+  name                            String
+  issuingOrganization             String
+  issueDate                       DateTime
+  expirationDate                  DateTime?
+  studentId                       String?
+  student                         Student?         @relation(fields: [studentId], references: [id])
+  serviceProviderId               String?
+  serviceProvider                 ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  credentialUrl                   String
+  uploadedCertificateUrl          String
+  uploadedCertificateCloudinaryId String
+  createdAt                       DateTime         @default(now())
+  updatedAt                       DateTime         @updatedAt
+}
+
+model GuarantorDetails {
+  id                        String   @id @default(uuid())
+  student                   Student  @relation(fields: [studentId], references: [id])
+  studentId                 String
+  guarantorFirstName        String
+  guarantorLastName         String
+  date                      DateTime
+  relationshipWithGuarantor String
+  guarantorEmail            String
+  guarantorPhoneNumber      String
+  profilePicture            Json
+  validID                   Json
+  signature                 Json
+  applicantSignature        Json
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+}
+
+model StudentProfileSummary {
+  id                   String   @id @default(uuid())
+  studentId            String   @unique
+  student              Student  @relation(fields: [studentId], references: [id])
+  title                String
+  professionalOverview String   @db.Text
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+enum Degree {
+  BACHELOR_OF_SCIENCE
+  BACHELOR_OF_ARTS
+  MASTERS
+  PHD
+  UNDERGRADUATE
+}
+
+enum EmploymentType {
+  CONTRACT
+  FULL_TIME
+  PART_TIME
+  FREELANCING
+}
+
+model Portfolio {
+  id                String           @id @default(uuid())
+  studentId         String?          @unique
+  student           Student?         @relation(fields: [studentId], references: [id])
+  serviceProviderId String?          @unique
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  portfolioUrl      String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  portfolioLinks    PortfolioFiles[]
+}
+
+model PortfolioFiles {
+  id               String    @id @default(uuid())
+  portfolioId      String
+  portfolio        Portfolio @relation(fields: [portfolioId], references: [id])
+  publicId         String
+  publicUrl        String
+  originalFilename String
+  format           String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model PitchVideo {
+  id                String           @id @default(uuid())
+  studentId         String?          @unique
+  student           Student?         @relation(fields: [studentId], references: [id])
+  serviceProviderId String?          @unique
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  publicId          String
+  publicUrl         String
+  originalFilename  String
+  format            String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model Admin {
+  id                          String            @id @default(uuid())
+  userName                    String            @unique
+  user                        User              @relation(fields: [userId], references: [id])
+  userId                      String            @unique
+  autoCreatePassword          Boolean?          @default(true)
+  domain                      String?
+  deleted                     Boolean           @default(false)
+  sendPassword                Boolean?          @default(false)
+  requireUserToChangePassword Boolean?          @default(true)
+  createdAt                   DateTime          @default(now())
+  updatedAt                   DateTime          @updatedAt
+  adminInformation            AdminInformation?
+  roles                       RoleUser[]
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String
+  permissions RolePermission[]
+  users       RoleUser[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model RoleUser {
+  id        String   @id @default(uuid())
+  admin     Admin    @relation(fields: [adminId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
+  adminId   String
+  roleId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  isActive     Boolean    @default(false)
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model AdminInformation {
+  id            String   @id @default(uuid())
+  jobTitle      String
+  department    String
+  office        String
+  officePhone   String
+  faxNumber     String
+  mobilePhone   String
+  city          String
+  state         String
+  zipCode       String
+  country       String
+  streetAddress String
+  adminId       String   @unique
+  admin         Admin    @relation(fields: [adminId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AcademicSession {
+  id          String                @id @default(uuid())
+  yearSession String                @unique
+  status      AcademicSessionStatus @default(PENDING)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  student     Student[]
+}
+
+enum AcademicSessionStatus {
+  PENDING
+  ONGOING
+  COMPLETE
+}
+
+model Semester {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  status    SemesterStatus
+  course    Course[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+enum SemesterStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Course {
+  id               String            @id @default(uuid())
+  name             String            @unique
+  courseCategories FieldOfInterest[]
+  semesterId       String
+  semester         Semester          @relation(fields: [semesterId], references: [id])
+  status           SemesterStatus
+  courseLevel      ExperienceLevel
+  abbreviation     String            @unique
+  code             String
+  courseCode       String            @unique
+  topics           Topic[]
+  courseBenefits   CourseBenefit[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Topic {
+  id            String          @id @default(uuid())
+  name          String
+  courseId      String
+  course        Course          @relation(fields: [courseId], references: [id])
+  subTopics     SubTopic[]
+  courseInclude CourseInclude[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model SubTopic {
+  id        String   @id @default(uuid())
+  name      String
+  topicId   String
+  topic     Topic    @relation(fields: [topicId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CourseBenefit {
+  id        String   @id @default(uuid())
+  benefit   String   @db.Text
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CourseInclude {
+  id          String   @id @default(uuid())
+  description String
+  topicId     String?
+  topic       Topic?   @relation(fields: [topicId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

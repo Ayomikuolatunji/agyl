@@ -1,0 +1,28 @@
+on:
+  push:
+    branches: ["main", "develop", "ayomiku_cu_dev_branch", "ekene-dev"]
+  pull_request:
+    branches: ["main", "develop", "ayomiku_cu_dev_branch", "ekene-dev"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Set environment variables
+        run: |
+          echo "DATABASE_URL=postgres://ayomiku:LlYQYQA7xr08awRfRc9AvpPj10bFg5r8@dpg-cj54f8s5kgrc738e29m0-a.oregon-postgres.render.com/dev_db_kzi6" >> $GITHUB_ENV
+          echo "REDIS_URL=rediss://red-cjs8haojbais73doe31g:ZdzFKVZM3oHEuIwzJiN6ymbUjvIuQlJw@oregon-redis.render.com:6379" >> $GITHUB_ENV
+      - name: Install dependencies
+        run: npm install
+      - name: Run BUILD
+        run: |
+          npm run build
